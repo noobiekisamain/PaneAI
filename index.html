@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PaneAI — Train and chat with your own AI</title>
+<meta name="description" content="PaneAI lets you train your own AI models on your Windows PC, chat with them, and export them. Built in C++ by Cobalt Studios.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#050505;
+--glass:rgba(255,255,255,0.045);
+--glass-strong:rgba(255,255,255,0.08);
+--border:rgba(255,255,255,0.10);
+--border-strong:rgba(255,255,255,0.18);
+--text:#f4f4f4;
+--muted:#9a9a9a;
+--faint:#5c5c5c;
+--radius:20px;
+}
+html{scroll-behavior:smooth}
+body{
+font-family:'Inter',system-ui,sans-serif;
+background:var(--bg);
+color:var(--text);
+line-height:1.6;
+overflow-x:hidden;
+-webkit-font-smoothing:antialiased;
+}
+.bg{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+.orb{position:absolute;border-radius:50%;filter:blur(110px);opacity:.55}
+.orb.a{width:620px;height:620px;background:#2a2a2a;top:-180px;left:-160px;animation:drift 22s ease-in-out infinite}
+.orb.b{width:520px;height:520px;background:#1c1c1c;bottom:-160px;right:-120px;animation:drift 26s ease-in-out infinite reverse}
+.orb.c{width:380px;height:380px;background:#333;top:40%;left:55%;opacity:.25;animation:drift 30s ease-in-out infinite}
+.grid-lines{
+position:absolute;inset:0;
+background-image:linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px);
+background-size:64px 64px;
+mask-image:radial-gradient(ellipse at 50% 30%,#000 30%,transparent 75%);
+-webkit-mask-image:radial-gradient(ellipse at 50% 30%,#000 30%,transparent 75%);
+}
+@keyframes drift{0%,100%{transform:translate(0,0)}50%{transform:translate(60px,40px)}}
+.wrap{max-width:1160px;margin:0 auto;padding:0 28px}
+.glass{
+background:var(--glass);
+border:1px solid var(--border);
+backdrop-filter:blur(22px) saturate(120%);
+-webkit-backdrop-filter:blur(22px) saturate(120%);
+border-radius:var(--radius);
+}
+nav{position:sticky;top:16px;z-index:50;margin-top:16px}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 12px 20px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;letter-spacing:-.01em;color:var(--text);text-decoration:none}
+.logo{width:28px;height:28px;border-radius:8px;border:1px solid var(--border-strong);background:linear-gradient(145deg,rgba(255,255,255,.22),rgba(255,255,255,.03));display:grid;place-items:center}
+.logo span{width:10px;height:10px;border:2px solid #fff;border-radius:3px}
+.nav-links{display:flex;gap:28px}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:14px;transition:color .2s}
+.nav-links a:hover{color:var(--text)}
+.btn{
+display:inline-flex;align-items:center;gap:10px;
+padding:12px 22px;border-radius:12px;
+font-family:inherit;font-weight:600;font-size:14.5px;
+text-decoration:none;cursor:pointer;border:1px solid transparent;
+transition:transform .2s,background .2s,border-color .2s,box-shadow .2s;
+}
+.btn:hover{transform:translateY(-2px)}
+.btn-primary{background:#f4f4f4;color:#050505;box-shadow:0 8px 30px rgba(255,255,255,.08)}
+.btn-primary:hover{background:#fff;box-shadow:0 10px 40px rgba(255,255,255,.16)}
+.btn-ghost{background:var(--glass);border-color:var(--border-strong);color:var(--text);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.btn-ghost:hover{background:var(--glass-strong)}
+.btn-sm{padding:9px 16px;font-size:13.5px;border-radius:10px}
+.hero{padding:110px 0 80px;text-align:center}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;font-size:12.5px;color:var(--muted);margin-bottom:28px}
+.pill .dot{width:6px;height:6px;border-radius:50%;background:#fff;box-shadow:0 0 10px #fff;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+h1{font-size:clamp(42px,7vw,82px);font-weight:800;letter-spacing:-.045em;line-height:1.02;margin-bottom:24px}
+h1 .soft{background:linear-gradient(180deg,#fff 0%,#7a7a7a 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{font-size:clamp(16px,2vw,19px);color:var(--muted);max-width:620px;margin:0 auto 40px}
+.cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.meta{margin-top:22px;font-size:13px;color:var(--faint)}
+.app{margin:80px auto 0;max-width:960px;text-align:left;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,.6)}
+.titlebar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}
+.titlebar .t{font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.win{display:flex;gap:14px}
+.win i{display:block;width:11px;height:1.5px;background:var(--faint)}
+.win i.x{position:relative;background:none}
+.win i.x:before,.win i.x:after{content:"";position:absolute;left:0;top:0;width:12px;height:1.5px;background:var(--faint);transform:rotate(45deg)}
+.win i.x:after{transform:rotate(-45deg)}
+.app-body{display:grid;grid-template-columns:220px 1fr;min-height:400px}
+.side{border-right:1px solid var(--border);padding:16px 12px;display:flex;flex-direction:column;gap:4px}
+.side .label{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);padding:10px 10px 6px}
+.side .item{font-size:13.5px;color:var(--muted);padding:9px 12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center}
+.side .item.on{background:var(--glass-strong);color:var(--text);border:1px solid var(--border)}
+.side .item small{font-size:11px;color:var(--faint)}
+.chat{display:flex;flex-direction:column;padding:22px;gap:14px}
+.msg{max-width:78%;padding:12px 16px;border-radius:14px;font-size:14px;line-height:1.55}
+.msg.user{align-self:flex-end;background:rgba(255,255,255,.9);color:#0a0a0a;border-bottom-right-radius:4px}
+.msg.bot{align-self:flex-start;background:var(--glass-strong);border:1px solid var(--border);border-bottom-left-radius:4px}
+.file{display:flex;align-items:center;gap:10px;margin-top:10px;padding:9px 12px;border-radius:10px;border:1px solid var(--border-strong);background:rgba(0,0,0,.25);font-family:'JetBrains Mono',monospace;font-size:12.5px}
+.file .ic{width:22px;height:26px;border:1.5px solid var(--muted);border-radius:3px;position:relative}
+.file .ic:after{content:"";position:absolute;right:-1.5px;top:-1.5px;width:8px;height:8px;background:#151515;border-left:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted)}
+.typing{display:flex;gap:5px;padding:14px 16px}
+.typing span{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:bounce 1.2s infinite}
+.typing span:nth-child(2){animation-delay:.15s}
+.typing span:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+.input{margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;border:1px solid var(--border);background:rgba(0,0,0,.3);font-size:13.5px;color:var(--faint)}
+.input .send{margin-left:auto;width:30px;height:30px;border-radius:9px;background:#f4f4f4;display:grid;place-items:center}
+.input .send:after{content:"";width:0;height:0;border-left:8px solid #050505;border-top:5px solid transparent;border-bottom:5px solid transparent;margin-left:2px}
+section{padding:100px 0}
+.head{text-align:center;max-width:640px;margin:0 auto 56px}
+.eyebrow{font-size:12.5px;text-transform:uppercase;letter-spacing:.16em;color:var(--faint);margin-bottom:14px}
+h2{font-size:clamp(30px,4.5vw,48px);font-weight:700;letter-spacing:-.035em;line-height:1.1;margin-bottom:16px}
+.head p{color:var(--muted);font-size:17px}
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.card{padding:30px;transition:transform .3s,border-color .3s,background .3s}
+.card:hover{transform:translateY(-4px);border-color:var(--border-strong);background:var(--glass-strong)}
+.icon{width:44px;height:44px;border-radius:12px;border:1px solid var(--border-strong);background:linear-gradient(145deg,rgba(255,255,255,.12),rgba(255,255,255,.02));display:grid;place-items:center;margin-bottom:20px}
+.icon svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.card h3{font-size:18px;font-weight:600;letter-spacing:-.01em;margin-bottom:8px}
+.card p{color:var(--muted);font-size:14.5px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;counter-reset:s}
+.step{padding:30px;position:relative}
+.step .n{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--faint);margin-bottom:18px}
+.step h3{font-size:20px;font-weight:600;margin-bottom:8px;letter-spacing:-.015em}
+.step p{color:var(--muted);font-size:14.5px}
+.code{margin-top:18px;padding:14px 16px;border-radius:12px;background:rgba(0,0,0,.35);border:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#cfcfcf;line-height:1.7}
+.code .c{color:var(--faint)}
+.bar{height:4px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;width:72%;background:linear-gradient(90deg,#666,#fff);animation:load 3.5s ease-in-out infinite}
+@keyframes load{0%{width:8%}100%{width:96%}}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:18px}
+.stat{padding:26px;text-align:center}
+.stat b{display:block;font-size:30px;font-weight:700;letter-spacing:-.03em}
+.stat span{color:var(--muted);font-size:13.5px}
+.download{padding:64px 40px;text-align:center;position:relative;overflow:hidden}
+.download:before{content:"";position:absolute;width:500px;height:500px;border-radius:50%;background:rgba(255,255,255,.06);filter:blur(80px);top:-250px;left:50%;transform:translateX(-50%)}
+.download > *{position:relative}
+.download h2{margin-bottom:12px}
+.download p{color:var(--muted);margin-bottom:32px}
+.ver{display:inline-block;margin-top:20px;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--faint)}
+.faq{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+details{padding:20px 24px;cursor:pointer;transition:background .2s}
+details[open]{background:var(--glass-strong)}
+summary{list-style:none;font-weight:600;font-size:16px;display:flex;justify-content:space-between;align-items:center}
+summary::-webkit-details-marker{display:none}
+summary:after{content:"+";font-weight:300;font-size:22px;color:var(--muted);transition:transform .25s}
+details[open] summary:after{transform:rotate(45deg)}
+details p{color:var(--muted);font-size:15px;margin-top:12px}
+footer{padding:50px 0 60px;border-top:1px solid var(--border);margin-top:40px}
+.foot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px}
+.foot p{color:var(--faint);font-size:13.5px}
+.foot-links{display:flex;gap:24px}
+.foot-links a{color:var(--muted);font-size:13.5px;text-decoration:none}
+.foot-links a:hover{color:var(--text)}
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .8s ease,transform .8s ease}
+.reveal.in{opacity:1;transform:none}
+@media (max-width:900px){
+.features,.steps{grid-template-columns:1fr}
+.stats{grid-template-columns:repeat(2,1fr)}
+.app-body{grid-template-columns:1fr}
+.side{display:none}
+.nav-links{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+*{animation:none!important;transition:none!important}
+.reveal{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+<div class="bg">
+<div class="orb a"></div>
+<div class="orb b"></div>
+<div class="orb c"></div>
+<div class="grid-lines"></div>
+</div>
+
+<div class="wrap">
+<nav>
+<div class="nav-inner glass">
+<a href="#" class="brand"><div class="logo"><span></span></div>PaneAI</a>
+<div class="nav-links">
+<a href="#features">Features</a>
+<a href="#how">How it works</a>
+<a href="#faq">FAQ</a>
+</div>
+<a href="#download" class="btn btn-primary btn-sm">Download</a>
+</div>
+</nav>
+
+<header class="hero">
+<div class="pill glass"><span class="dot"></span>Now available for Windows</div>
+<h1>Your own AI.<br><span class="soft">Trained by you.</span></h1>
+<p class="lead">PaneAI lets you train your own AI models right on your PC, chat with them, and export them. Built with a fast C++ engine.</p>
+<div class="cta">
+<a href="#download" class="btn btn-primary">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+Download for Windows
+</a>
+<a href="#features" class="btn btn-ghost">See features</a>
+</div>
+<p class="meta">Free · Windows · by Cobalt Studios</p>
+
+<div class="app glass reveal">
+<div class="titlebar">
+<div class="t"><div class="logo" style="width:18px;height:18px;border-radius:5px"><span style="width:6px;height:6px;border-width:1.5px;border-radius:2px"></span></div>PaneAI</div>
+<div class="win"><i></i><i style="width:10px;height:10px;border:1.5px solid var(--faint);background:none"></i><i class="x"></i></div>
+</div>
+<div class="app-body">
+<div class="side">
+<div class="label">Models</div>
+<div class="item on">nova-small <small>ready</small></div>
+<div class="item">story-bot <small>ready</small></div>
+<div class="item">code-helper <small>training</small></div>
+<div class="label">Tools</div>
+<div class="item">Train</div>
+<div class="item">Export</div>
+<div class="item">Settings</div>
+</div>
+<div class="chat">
+<div class="msg user">Write me a to-do list for my week and save it as a file.</div>
+<div class="msg bot">Done! Here's your week planned out. I saved it so you can open it any time.
+<div class="file"><div class="ic"></div>week-plan.txt</div>
+</div>
+<div class="msg user">Nice. Now make it longer and add a workout every day.</div>
+<div class="msg bot typing"><span></span><span></span><span></span></div>
+<div class="input">Message nova-small...<div class="send"></div></div>
+</div>
+</div>
+</div>
+</header>
+
+<section id="features">
+<div class="head reveal">
+<div class="eyebrow">Features</div>
+<h2>Everything you need to build an AI</h2>
+<p>From training to chatting to sharing, it all happens in one clean app.</p>
+</div>
+<div class="features">
+<div class="card glass reveal">
+<div class="icon"><svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/></svg></div>
+<h3>Train your own models</h3>
+<p>Feed PaneAI your own text and train a model that talks the way you want.</p>
+</div>
+<div class="card glass reveal">
+<div class="icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+<h3>Chat with them</h3>
+<p>Talk to any of your models in a smooth chat window, just like the big AI apps.</p>
+</div>
+<div class="card glass reveal">
+<div class="icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M12 18v-6M9 15h6"/></svg></div>
+<h3>AI that creates files</h3>
+<p>Ask your model to write something and it saves it as a real file on your PC.</p>
+</div>
+<div class="card glass reveal">
+<div class="icon"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+<h3>No token limit</h3>
+<p>No max length on answers. Your model keeps writing for as long as it needs to.</p>
+</div>
+<div class="card glass reveal">
+<div class="icon"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg></div>
+<h3>Export your models</h3>
+<p>Export any model you trained so you can back it up or share it with friends.</p>
+</div>
+<div class="card glass reveal">
+<div class="icon"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9zM9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/></svg></div>
+<h3>Fast C++ engine</h3>
+<p>The engine is written in C++, so training and chatting run fast on your own hardware.</p>
+</div>
+</div>
+</section>
+
+<section id="how">
+<div class="head reveal">
+<div class="eyebrow">How it works</div>
+<h2>Three steps to your own AI</h2>
+<p>No coding needed. Just pick your data and go.</p>
+</div>
+<div class="steps">
+<div class="step glass reveal">
+<div class="n">01</div>
+<h3>Create a model</h3>
+<p>Give it a name and pick a size. Small models train faster, bigger ones get smarter.</p>
+<div class="code"><span class="c">name</span>  nova-small<br><span class="c">size</span>  small</div>
+</div>
+<div class="step glass reveal">
+<div class="n">02</div>
+<h3>Train it</h3>
+<p>Drop in your text files and hit train. Watch the progress live.</p>
+<div class="code"><span class="c">training</span> nova-small<div class="bar"><i></i></div></div>
+</div>
+<div class="step glass reveal">
+<div class="n">03</div>
+<h3>Chat and export</h3>
+<p>Start chatting right away, or export the model to keep or share.</p>
+<div class="code"><span class="c">status</span>  ready<br><span class="c">export</span>  nova-small</div>
+</div>
+</div>
+<div class="stats">
+<div class="stat glass reveal"><b>C++</b><span>Native engine</span></div>
+<div class="stat glass reveal"><b>∞</b><span>No token limit</span></div>
+<div class="stat glass reveal"><b>100%</b><span>On your PC</span></div>
+<div class="stat glass reveal"><b>Free</b><span>To download</span></div>
+</div>
+</section>
+
+<section id="download">
+<div class="download glass reveal">
+<div class="eyebrow">Download</div>
+<h2>Get PaneAI</h2>
+<p>Train your first model in minutes.</p>
+<a href="https://github.com/noobiekisa/PaneAI/releases/latest" class="btn btn-primary">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+Download for Windows
+</a>
+<div><span class="ver">Version 1.0</span></div>
+</div>
+</section>
+
+<section id="faq">
+<div class="head reveal">
+<div class="eyebrow">FAQ</div>
+<h2>Questions</h2>
+</div>
+<div class="faq">
+<details class="glass reveal">
+<summary>Is PaneAI free?</summary>
+<p>Yes, PaneAI is free to download and use.</p>
+</details>
+<details class="glass reveal">
+<summary>Do I need to know how to code?</summary>
+<p>No. You create a model, add your text, and press train. Everything happens through the app.</p>
+</details>
+<details class="glass reveal">
+<summary>Where do my models and data go?</summary>
+<p>Everything you train stays on your own PC. You choose when to export a model and where to put it.</p>
+</details>
+<details class="glass reveal">
+<summary>How smart will my model be?</summary>
+<p>PaneAI trains small models on your own computer. They won't match giant cloud AIs, but they learn from exactly what you give them, and more data and bigger sizes make them better.</p>
+</details>
+<details class="glass reveal">
+<summary>Can my AI really make files?</summary>
+<p>Yes. When you ask your model to write something, PaneAI can save the answer as a file on your PC.</p>
+</details>
+</div>
+</section>
+
+<footer>
+<div class="foot">
+<a href="#" class="brand"><div class="logo"><span></span></div>PaneAI</a>
+<p>A Cobalt Studios app · Made by noobiekisa</p>
+<div class="foot-links">
+<a href="#features">Features</a>
+<a href="#download">Download</a>
+<a href="#faq">FAQ</a>
+</div>
+</div>
+</footer>
+</div>
+
+<script>
+const io=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting){x.target.classList.add('in');io.unobserve(x.target)}})},{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
